@@ -91,6 +91,12 @@ export default async function EstagioDetailsPage({ params }: { params: { id: str
                                 </div>
                             </div>
                             <div>
+                                <h4 className="font-semibold text-sm">Tipo de Documentação</h4>
+                                <p className="text-muted-foreground">
+                                    {contrato.tipoDocumentacao === 'TCE' ? 'Termo de Compromisso (TCE)' : contrato.tipoDocumentacao}
+                                </p>
+                            </div>
+                            <div>
                                 <h4 className="font-semibold text-sm">Supervisor</h4>
                                 <p className="text-muted-foreground">{contrato.campo.supervisorNome} ({contrato.campo.supervisorCargo})</p>
                             </div>
