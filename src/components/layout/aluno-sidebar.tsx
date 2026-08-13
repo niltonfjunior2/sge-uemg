@@ -50,14 +50,12 @@ export function AlunoSidebar({ userName, hasActiveInternship }: AlunoSidebarProp
                 </Button>
             </Link>
 
-            {hasActiveInternship && (
-                <Link href="/aluno/documentos" onClick={() => setOpen(false)}>
-                    <Button variant={pathname === "/aluno/documentos" ? "secondary" : "ghost"} className="w-full justify-start gap-2">
-                        <FileText className="h-4 w-4" />
-                        Documentos
-                    </Button>
-                </Link>
-            )}
+            <Link href="/aluno/documentos" onClick={() => setOpen(false)}>
+                <Button variant={pathname === "/aluno/documentos" ? "secondary" : "ghost"} className="w-full justify-start gap-2">
+                    <FileText className="h-4 w-4" />
+                    Documentos
+                </Button>
+            </Link>
             
             <div className="mt-auto border-t pt-4">
                 <form action={logoutAction}>
