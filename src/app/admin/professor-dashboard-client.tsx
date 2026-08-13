@@ -150,7 +150,7 @@ export function ProfessorDashboardClient({ contratos: initialContratos, ofertas 
 
             {/* Lista de Alunos (Dynamic) */}
             {filteredContratos.length > 0 ? (
-                <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+                <div className="rounded-md border bg-white shadow-sm overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
                             <tr>

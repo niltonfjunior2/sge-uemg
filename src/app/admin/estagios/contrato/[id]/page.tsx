@@ -234,8 +234,8 @@ export default async function EstagioDetailsPage({ params }: { params: { id: str
                                         {diaryEntries.length === 0 ? (
                                             <div className="text-sm text-muted-foreground italic">Nenhuma atividade registrada.</div>
                                         ) : (
-                                            <div className="rounded-md border text-sm">
-                                                <table className="w-full">
+                                            <div className="rounded-md border text-sm overflow-x-auto">
+                                                <table className="w-full min-w-[500px]">
                                                     <thead className="bg-muted">
                                                         <tr className="text-left">
                                                             <th className="p-2 font-medium">Data</th>

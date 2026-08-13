@@ -11,8 +11,8 @@ interface StepperProps {
 
 export function Stepper({ steps, currentStep }: StepperProps) {
     return (
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
-            <div className="relative flex items-center justify-between">
+        <div className="mx-auto w-full max-w-4xl px-4 py-6 overflow-x-auto pb-10 scrollbar-thin">
+            <div className="relative flex items-center justify-between min-w-[400px]">
                 {/* Progress Bar Background */}
                 <div className="absolute top-1/2 left-0 h-1 w-full -translate-y-1/2 rounded bg-muted"></div>
 
