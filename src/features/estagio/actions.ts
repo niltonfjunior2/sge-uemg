@@ -8,6 +8,8 @@ import { getCurrentUserRole, createClient } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isJanelaCadastroAberta } from "@/lib/system"
 import { assertAlunoOwnsContract } from "@/lib/security"
+import { sendEmail } from "@/lib/email"
+import { buildNewInternshipRequestHtml } from "./email-templates"
 
 // Helper assertAlunoOwnsContract extraído para @/lib/security
 
@@ -30,7 +32,8 @@ export async function createEstagio(data: NovoEstagioFormData) {
     try {
         // 2. Fetch Student Profile
         const aluno = await prisma.aluno.findUnique({
-            where: { profileId: user.id }
+            where: { profileId: user.id },
+            include: { profile: true }
         })
 
         if (!aluno) {
@@ -46,7 +49,12 @@ export async function createEstagio(data: NovoEstagioFormData) {
                     periodoVinculado: aluno.periodoAtual
                 }
             },
-            include: { curso: true }
+            include: { 
+                curso: true,
+                professor: {
+                    include: { profile: true }
+                }
+            }
         })
 
         if (!oferta) {
@@ -85,6 +93,31 @@ export async function createEstagio(data: NovoEstagioFormData) {
                 }
             })
         })
+
+        // Enviar e-mail para o orientador informando a nova solicitação
+        try {
+            const professorProfile = oferta.professor.profile;
+            const alunoProfile = aluno.profile;
+            
+            // Tenta usar o e-mail alternativo primeiro
+            const toEmail = professorProfile.emailAlternativo || professorProfile.email;
+            
+            const emailHtml = buildNewInternshipRequestHtml({
+                professorName: professorProfile.nomeCompleto,
+                internName: alunoProfile.nomeCompleto,
+                courseName: oferta.curso.nome,
+                companyName: empresa.razaoSocial
+            });
+
+            await sendEmail({
+                to: toEmail,
+                subject: `Nova Solicitação de Estágio - ${alunoProfile.nomeCompleto}`,
+                html: emailHtml
+            });
+        } catch (emailError) {
+            console.error("Erro ao enviar e-mail de notificação de novo estágio:", emailError);
+            // Falha silenciosa para não impedir a criação do estágio caso haja erro de envio de e-mail
+        }
 
         revalidatePath('/aluno')
         return { success: true }

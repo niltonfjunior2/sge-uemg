@@ -48,3 +48,33 @@ export function buildInternAlertHtml(data: InternAlertData): string {
     </div>
     `;
 }
+
+export interface NewInternshipRequestData {
+    professorName: string;
+    internName: string;
+    courseName: string;
+    companyName: string;
+}
+
+export function buildNewInternshipRequestHtml(data: NewInternshipRequestData): string {
+    return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937;">
+        <h2 style="color: #111827;">Olá, Prof. ${data.professorName}</h2>
+        <p>Um novo aluno acabou de registrar uma solicitação de estágio vinculado à sua oferta de <strong>${data.courseName}</strong>.</p>
+        
+        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #374151;">Detalhes da Solicitação</h3>
+            <p><strong>Aluno:</strong> ${data.internName}</p>
+            <p><strong>Empresa Concedente:</strong> ${data.companyName}</p>
+        </div>
+
+        <p style="margin-top: 30px; font-size: 14px; color: #6b7280;">
+            Acesse o <a href="https://sge-sistemas.vercel.app/admin" style="color: #2563eb;">Painel de Administração do SGE</a> para avaliar o plano de atividades e a documentação enviada.
+        </p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #9ca3af;">
+            Este é um e-mail automático enviado pelo Sistema de Gestão de Estágios da UEMG. Por favor, não responda a este e-mail.
+        </p>
+    </div>
+    `;
+}
