@@ -447,14 +447,33 @@ export async function deleteContractAction(id: number) {
     }
 
     try {
-        await prisma.contratoEstagio.delete({
-            where: { id }
-        })
+        const contrato = await prisma.contratoEstagio.findUnique({
+            where: { id },
+            include: { acompanhamentos: { include: { etapaDef: true } } }
+        });
+
+        if (!contrato) return { success: false, error: "Contrato não encontrado." };
+
+        const sortedAcompanhamentos = [...contrato.acompanhamentos].sort((a, b) => a.etapaDef.numeroEtapa - b.etapaDef.numeroEtapa);
+        const firstPending = sortedAcompanhamentos.find(a => a.status === 'PENDENTE' || a.status === 'EM_ANALISE' || a.status === 'REJEITADO');
+        const totalSteps = sortedAcompanhamentos.length;
+        const currentStepId = firstPending ? firstPending.etapaDef.numeroEtapa : (totalSteps + 1);
+
+        if (currentStepId > 1) {
+            return { success: false, error: "O contrato só pode ser excluído se estiver na primeira etapa." };
+        }
+
+        await prisma.$transaction([
+            prisma.diarioAtividade.deleteMany({ where: { idContrato: id } }),
+            prisma.acompanhamentoEtapa.deleteMany({ where: { idContrato: id } }),
+            prisma.contratoEstagio.delete({ where: { id } })
+        ]);
+
         revalidatePath('/admin')
         return { success: true }
     } catch (error) {
         console.error("Erro ao excluir contrato:", error)
-        return { success: false, error: "Erro ao excluir o contrato. Verifique se existem dependências." }
+        return { success: false, error: "Erro interno ao tentar excluir o contrato." }
     }
 }
 

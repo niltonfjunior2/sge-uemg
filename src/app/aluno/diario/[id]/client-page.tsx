@@ -204,9 +204,8 @@ export function DiarioClient({ contratoId, initialEntries, etapaId, canSubmit, m
                                 {/* Only show PDF button if Total Required is met */}
                                 {totalRequired > 0 && totalHoras >= totalRequired && (
                                     <Button
-                                        variant="outline"
                                         size="sm"
-                                        className="gap-2"
+                                        className="gap-2 bg-blue-600 text-white hover:bg-blue-800 border-none"
                                         onClick={() => window.open(`/aluno/diario/${contratoId}/pdf`, '_blank')}
                                     >
                                         <Save className="w-4 h-4" />

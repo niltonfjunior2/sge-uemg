@@ -21,9 +21,10 @@ import { useToast } from "@/hooks/use-toast"
 interface ContractActionsProps {
     contractId: number
     status: string // 'PENDENTE' | 'APROVADO' | 'REJEITADO'
+    currentStepId: number
 }
 
-export function ContractActions({ contractId, status }: ContractActionsProps) {
+export function ContractActions({ contractId, status, currentStepId }: ContractActionsProps) {
     const [isPending, startTransition] = useTransition()
     const { toast } = useToast()
     const router = useRouter()
@@ -95,28 +96,30 @@ export function ContractActions({ contractId, status }: ContractActionsProps) {
                 </AlertDialog>
             )}
 
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir Estágio?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta ação não pode ser desfeita. Isso excluirá permanentemente o contrato de estágio,
-                            todos os relatórios associados e o histórico de etapas.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, Excluir"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {currentStepId === 1 && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Estágio?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Esta ação não pode ser desfeita. Isso excluirá permanentemente o contrato de estágio,
+                                os dados submetidos na primeira etapa e eventuais rascunhos de atividades. Não será possível recuperar esses dados.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, Excluir"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </div>
     )
 }

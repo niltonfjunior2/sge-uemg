@@ -63,7 +63,11 @@ export default async function EstagioDetailsPage({ params }: { params: { id: str
                     <Badge variant={contrato.statusAprovacao === 'ATIVO' ? 'success' : 'secondary'}>
                         {contrato.statusAprovacao}
                     </Badge>
-                    <ContractActions contractId={contrato.id} status={contrato.statusAprovacao || 'PENDENTE'} />
+                    <ContractActions 
+                        contractId={contrato.id} 
+                        status={contrato.statusAprovacao || 'PENDENTE'} 
+                        currentStepId={currentStepId}
+                    />
                 </div>
             </div>
 
