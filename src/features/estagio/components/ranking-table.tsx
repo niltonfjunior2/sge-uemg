@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Medal, Building2, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { corrigirNomeEmpresa } from "@/features/estagio/actions"
 import {
     Dialog,
@@ -52,7 +52,6 @@ export function RankingTable({ ranking, isAdmin = false }: RankingTableProps) {
             toast({
                 title: "Empresas Atualizadas",
                 description: `Foram atualizados ${result.count} registros vinculados com sucesso!`,
-                variant: "success",
             })
             setEditingCompany(null)
         } else {
