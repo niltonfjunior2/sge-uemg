@@ -149,7 +149,7 @@ export default async function AdminDashboard({
                             <CardDescription>Gerencie as solicitações e acompanhe o progresso.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ContratoTable contratos={contratos} />
+                            <ContratoTable contratos={contratos.filter(c => c.statusAprovacao === 'ATIVO')} />
                         </CardContent>
                     </Card>
                 </>

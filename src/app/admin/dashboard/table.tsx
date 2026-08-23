@@ -71,7 +71,7 @@ export function ContratoTable({ contratos }: ContratoTableProps) {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Link href={`/admin/estagios/${contrato.id}`}>
+                                    <Link href={`/admin/estagios/contrato/${contrato.id}`}>
                                         <Button variant="ghost" size="icon">
                                             <Eye className="h-4 w-4" />
                                         </Button>
