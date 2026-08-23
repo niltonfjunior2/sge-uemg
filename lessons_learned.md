@@ -432,12 +432,29 @@
 **Contexto:** Na renderização iterativa de tabelas (`contratos.map()`), a cor das "Badges" visuais dependia de múltiplos `ifs`/ternários aninhados `(status === 'X' ? 'red' : status === 'Y' ? 'blue'...)`. Isso inflacionava a complexidade ciclomática no momento do render JSX.
 **Solução:** Abstração completa dos ternários para Dicionários Constantes Chave-Valor (`const STATUS_MAP = { X: 'red', Y: 'blue' }`) alocados **fora** do escopo do componente, reduzindo a renderização visual a uma busca indexada elegante e rápida (`STATUS_MAP[status]`).
 **Prevenção:** Evite lógica condicional complexa dentro das instâncias de layout do React. Empregue mapas estáticos (Look-up tables) para injetar estilos ou valores computados baseados em Enumerações e Status.
+
+### [2026-08-23] - [DB/ARCHITECTURE] Saneamento Seguro vs Integridade Referencial (Rename-in-place)
+
+**Contexto:** O banco de dados acumulou duplicidades no `CampoEstagio` (ex: "Empresa XPTO" e "EMPRESA XPTO LTDA"). A primeira ideia seria criar um botão "Mesclar" que deletaria uma das entidades e atualizaria todos os IDs no `ContratoEstagio`.
+**Solução:** 
+Em sistemas com forte trilha de auditoria e geração de PDFs assinados, **deletar entidades estruturais é perigoso**. O Saneamento foi implementado via *Rename-in-place*: a UI exibe o botão "Corrigir Nome" que simplesmente faz um `UPDATE CampoEstagio SET razaoSocial = X WHERE id = Y`.
+O motor de Agrupamento SQL (`groupBy` ou Mapa por upper case) cuida de aglutinar os nomes corrigidos dinamicamente, sem nunca tocar nos `ContratoEstagio` já atrelados.
+**Prevenção:** Sempre planeje o saneamento de texto usando colunas desacopladas das chaves primárias. "Renomear" é seguro; "Deletar e Mudar IDs" é um pesadelo arquitetural.
+
+### [2026-08-23] - [DB/SECURITY] Filtragem de Contexto (Context-Aware) em Buscas Globais
+
+**Contexto:** Ao implementar o Ranking de Empresas e o Autocomplete, as queries iniciais buscavam todos os contratos de estágio (`findMany`). Em um sistema desenhado para múltiplas Unidades e Cursos (multi-tenant-like), isso gerou vazamento de escopo: alunos de um curso viam sugestões de empresas de outro curso completamente não-relacionado.
+**Solução:** 
+A camada de Data (`getEmpresasRanking` e `getEmpresasNomes`) foi refatorada para interceptar ativamente a sessão do usuário via `supabase.auth.getUser()`:
+1. Identifica o Role do usuário.
+2. Para ALUNO e PROFESSOR: Busca as relações do perfil e monta dinamicamente um `whereClause` rigoroso: `{ oferta: { curso: { cursoId: aluno.cursoId, curso: { unidadeId: aluno.curso.unidadeId } } } }`.
+3. Para ADMIN: Adicionou suporte a query params (`?unidade=X&curso=Y`) controlados via interface.
+**Prevenção:** Sempre que projetar endpoints ou server actions que agregam dados ("Rankings", "Listas", "Autocompletes"), assuma que o escopo deve ser restrito à hierarquia do usuário (Curso/Unidade) a menos que explicitamente solicitado como global pelo Admin.
+
 ### [2026-08-23] - [UI/UX] Autocomplete Nativo e Performático (HTML5 Datalist)
 
 **Contexto:** O formulário do aluno precisava de um campo de Empresa que fornecesse sugestões do banco, mas não o proibisse de digitar um texto 100% livre (fallback). Componentes como Combobox/Command do Shadcn requerem muita gestão de estado e travam o layout quando usados dentro do `react-hook-form` como input misto.
 **Solução:** Utilização do nativo `<input list="id">` com `<datalist>`. Isso repassa o ônus do filtro pro navegador, entregando acessibilidade e performance máxima sem adicionar um único `useState` ao componente.
-**Prevenção:** Antes de importar bibliotecas de Select/Combobox complexas para inputs "híbridos" (sugestão + livre), priorize a API nativa do HTML5 (`datalist`).
-
 ### [2026-08-23] - [DATA/INTEGRITY] Saneamento Visual (Rename-in-place) vs Deleção Relacional
 
 **Contexto:** Ocorreram cadastros de empresas duplicados (ex: "Prefeitura" e "Pref. Mun."). Fundir isso na tabela `CampoEstagio` (mudando os IDs dos `Contratos` e deletando o registro antigo) corria o risco crítico de perder dados intrínsecos de cada contrato (ex: contatos distintos do supervisor).

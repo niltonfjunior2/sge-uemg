@@ -177,6 +177,7 @@ Este documento define a estratégia de entrega incremental do SGE. Cada fase des
 **Atualização de Período Segura (v1.7.0):** 03/08/2026 - Implementação de destrava controlada do Período Letivo do aluno. A edição autônoma no perfil foi atrelada à inexistência de contratos ativos (bloqueio duplo: UI e API), permitindo avanço de semestre sem corromper auditorias de processos em andamento.
 **Dashboard Consolidado (v1.8.0):** 23/08/2026 - Implementação do painel de métricas históricas para o Administrador, incluindo tracking persistente de validações de autenticidade documental via hash e refatoração de consultas paralelas para performance (TTFB).
 **Ranking de Empresas e Autocomplete (v1.9.0):** 23/08/2026 - Implementação de Ranking histórico de empresas parceiras visível aos usuários, autocomplete via `datalist` nativo e recurso avançado de Saneamento Textual (Rename-in-place) que unifica duplicidades no banco garantindo 100% de integridade referencial dos contratos originais.
+**Filtragem de Contexto Multi-Tenant (v1.9.1):** 23/08/2026 - Evolução das buscas globais para serem sensíveis ao contexto (`Context-Aware`), restringindo dados por Curso e Unidade atrelados à sessão do usuário (`supabase.auth.getUser()`) no Ranking e Autocomplete, evitando poluição cruzada entre polos distintos da UEMG.
 
 O projeto SGE-UEMG atingiu todos os requisitos funcionais e não-funcionais planejados. O sistema está pronto para implantação em ambiente de homologação/produção.
 

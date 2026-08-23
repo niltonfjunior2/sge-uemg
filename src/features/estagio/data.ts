@@ -333,8 +333,69 @@ export async function getFiltrosData() {
     return { unidades, cursos };
 }
 
-export async function getEmpresasRanking() {
+async function buildContextualWhereClause(filtroUnidadeId?: number, filtroCursoId?: number) {
+    const role = await getCurrentUserRole();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    let whereClause: any = {};
+
+    if (user) {
+        if (role === 'ALUNO') {
+            const aluno = await prisma.aluno.findUnique({
+                where: { profileId: user.id },
+                include: { curso: true }
+            });
+            if (aluno?.cursoId) {
+                whereClause = {
+                    oferta: {
+                        curso: {
+                            cursoId: aluno.cursoId,
+                            curso: {
+                                unidadeId: aluno.curso?.unidadeId
+                            }
+                        }
+                    }
+                };
+            }
+        } else if (role === 'PROFESSOR') {
+            const prof = await prisma.professor.findUnique({
+                where: { profileId: user.id },
+                include: { curso: true }
+            });
+            if (prof?.cursoId) {
+                whereClause = {
+                    oferta: {
+                        curso: {
+                            cursoId: prof.cursoId,
+                            curso: {
+                                unidadeId: prof.curso?.unidadeId
+                            }
+                        }
+                    }
+                };
+            }
+        }
+    }
+
+    if (role === 'ADMIN') {
+        if (filtroCursoId || filtroUnidadeId) {
+            whereClause = { oferta: { curso: {} } };
+            if (filtroCursoId) whereClause.oferta.curso.cursoId = filtroCursoId;
+            if (filtroUnidadeId) {
+                whereClause.oferta.curso.curso = { unidadeId: filtroUnidadeId };
+            }
+        }
+    }
+    
+    return whereClause;
+}
+
+export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId?: number) {
+    const whereClause = await buildContextualWhereClause(filtroUnidadeId, filtroCursoId);
+    
     const contratos = await prisma.contratoEstagio.findMany({
+        where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
         include: {
             campo: true,
             oferta: true
@@ -367,7 +428,14 @@ export async function getEmpresasRanking() {
 }
 
 export async function getEmpresasNomes() {
+    const whereClause = await buildContextualWhereClause();
+
     const campos = await prisma.campoEstagio.findMany({
+        where: Object.keys(whereClause).length > 0 ? {
+            contratos: {
+                some: whereClause
+            }
+        } : undefined,
         select: { razaoSocial: true },
         distinct: ['razaoSocial']
     });
