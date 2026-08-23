@@ -432,3 +432,14 @@
 **Contexto:** Na renderização iterativa de tabelas (`contratos.map()`), a cor das "Badges" visuais dependia de múltiplos `ifs`/ternários aninhados `(status === 'X' ? 'red' : status === 'Y' ? 'blue'...)`. Isso inflacionava a complexidade ciclomática no momento do render JSX.
 **Solução:** Abstração completa dos ternários para Dicionários Constantes Chave-Valor (`const STATUS_MAP = { X: 'red', Y: 'blue' }`) alocados **fora** do escopo do componente, reduzindo a renderização visual a uma busca indexada elegante e rápida (`STATUS_MAP[status]`).
 **Prevenção:** Evite lógica condicional complexa dentro das instâncias de layout do React. Empregue mapas estáticos (Look-up tables) para injetar estilos ou valores computados baseados em Enumerações e Status.
+### [2026-08-23] - [UI/UX] Autocomplete Nativo e Performático (HTML5 Datalist)
+
+**Contexto:** O formulário do aluno precisava de um campo de Empresa que fornecesse sugestões do banco, mas não o proibisse de digitar um texto 100% livre (fallback). Componentes como Combobox/Command do Shadcn requerem muita gestão de estado e travam o layout quando usados dentro do `react-hook-form` como input misto.
+**Solução:** Utilização do nativo `<input list="id">` com `<datalist>`. Isso repassa o ônus do filtro pro navegador, entregando acessibilidade e performance máxima sem adicionar um único `useState` ao componente.
+**Prevenção:** Antes de importar bibliotecas de Select/Combobox complexas para inputs "híbridos" (sugestão + livre), priorize a API nativa do HTML5 (`datalist`).
+
+### [2026-08-23] - [DATA/INTEGRITY] Saneamento Visual (Rename-in-place) vs Deleção Relacional
+
+**Contexto:** Ocorreram cadastros de empresas duplicados (ex: "Prefeitura" e "Pref. Mun."). Fundir isso na tabela `CampoEstagio` (mudando os IDs dos `Contratos` e deletando o registro antigo) corria o risco crítico de perder dados intrínsecos de cada contrato (ex: contatos distintos do supervisor).
+**Solução:** Manutenção de todos os registros na base e alteração apenas da etiqueta textual (`razaoSocial`). Como o motor analítico conta e agrupa por *texto*, a renomeação padroniza o ranking e o autocomplete sem alterar nenhuma Foreign Key.
+**Prevenção:** Evite rotinas de "Merge & Delete" no banco de dados para dados periféricos já vinculados a registros imutáveis (como Contratos). Sanitize o *valor nominal* em lote e deixe as consultas de agrupamento cuidarem da fusão na interface.

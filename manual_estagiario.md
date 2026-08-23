@@ -56,7 +56,7 @@ Se você não possui nenhum estágio ativo, sua tela inicial (Dashboard) apresen
 1. Clique no botão **"Iniciar Novo Estágio"** (disponível no topo e no centro da dashboard).
 2. O sistema identificará automaticamente o seu período letivo atual e exibirá as **Ofertas de Estágio** ativas específicas para você. Se nenhuma oferta estiver cadastrada para seu período, entre em contato com a coordenação.
 3. Preencha o formulário detalhado, que está dividido em três seções:
-   * **Dados da Empresa (Campo de Estágio):** Razão Social, Nome Fantasia, CNPJ, telefone e e-mail.
+   * **Dados da Empresa (Campo de Estágio):** Razão Social, Nome Fantasia, CNPJ, telefone e e-mail. *(Dica: Ao clicar no campo Razão Social, o sistema irá auto-sugerir empresas cadastradas previamente. Caso a sua empresa seja inédita, sinta-se livre para ignorar a sugestão e digitar o nome completo).*
    * **Dados do Supervisor:** Nome completo, cargo, e-mail, telefone de contato, área de formação e titulação máxima (Especialista, Mestre, Doutor, etc.).
    * **Detalhes do Estágio:** Modalidade (Presencial, Híbrido ou Remoto), tipo de documentação (TCE, Estágio Obrigatório ou Não-Obrigatório), data de início prevista, carga horária diária (em horas) e a descrição das suas atribuições/atividades.
 
@@ -147,6 +147,10 @@ Após a conclusão e encerramento do estágio:
 * Você poderá acessar todos os seus estágios finalizados através do menu **"Histórico de Estágios"** na barra lateral.
 * Neste histórico, você pode emitir a qualquer momento o seu **Relatório Detalhado de Conclusão (PDF)**.
 * **Segurança e Idoneidade:** O relatório em PDF possui um **Código de Autenticidade (Hash)** único impresso no rodapé. Este código impede falsificações e pode ser utilizado pela instituição para validar a veracidade e integridade do seu documento através do portal administrativo.
+
+### 3.2. Ranking de Empresas Parceiras
+
+Além do seu histórico, você tem acesso ao **Ranking Empresas** na barra lateral. Este painel gamificado mostra o histórico de todas as empresas que já ofereceram oportunidades de estágio para os alunos do SGE, ajudando você a descobrir quais organizações mais contratam estagiários na nossa unidade e quando foi a última oferta.
 
 ---
 

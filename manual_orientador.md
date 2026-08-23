@@ -68,6 +68,13 @@ Lista todos os estagiários sob sua orientação, exibindo:
 * **Status do Contrato:** Status geral do estágio (`ATIVO`, `PENDENTE` ou `REJEITADO`).
 * **Alerta de Atraso:** Caso o aluno ultrapasse o prazo de conclusão dinâmica da sua etapa atual, o badge **"ATRASADO"** em vermelho se acenderá automaticamente nesta tabela, chamando sua atenção para auditoria.
 
+### 2.4. Ranking de Empresas Parceiras
+
+Além do acompanhamento direto de alunos, o painel do orientador disponibiliza a aba **"Ranking Empresas"** (acessível pela barra lateral). Esta funcionalidade:
+* Apresenta uma visão gamificada e agregada do total de estágios oferecidos por cada empresa ao longo da história do SGE.
+* Exibe a informação de quando foi o último período letivo que a empresa ofertou um estágio.
+* **Saneamento e Correções:** Como as métricas dependem dos nomes declarados pelos alunos, os gestores do sistema possuem a permissão de corrigir e unificar duplicidades de forma segura direto na interface do Ranking (coluna "Ações"), renomeando empresas com descrições incorretas ou variantes sem afetar os contratos já homologados.
+
 ---
 
 ## 3. Gestão e Auditoria de um Estágio (Tela de Detalhes)
