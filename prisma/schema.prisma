@@ -306,3 +306,13 @@ model Keepalive {
   @@map("keepalive")
   @@schema("public")
 }
+
+model LogVerificacaoDocumento {
+  id               Int      @id @default(autoincrement())
+  codigoVerificado String   @map("codigo_verificado")
+  tipoDocumento    String   @map("tipo_documento")
+  dataVerificacao  DateTime @default(now()) @map("data_verificacao") @db.Timestamptz
+
+  @@map("log_verificacao_documento")
+  @@schema("public")
+}

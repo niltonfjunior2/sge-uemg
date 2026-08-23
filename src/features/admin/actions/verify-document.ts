@@ -42,6 +42,13 @@ export async function verificarDocumentoAction(codigoCompleto: string) {
                 return { error: "CÓDIGO INVÁLIDO! Este documento foi forjado ou alterado." };
             }
 
+            await prisma.logVerificacaoDocumento.create({
+                data: {
+                    codigoVerificado: codigoCompleto,
+                    tipoDocumento: "Relatório Consolidado de Turma",
+                }
+            });
+
             return {
                 success: true,
                 data: {
@@ -84,6 +91,13 @@ export async function verificarDocumentoAction(codigoCompleto: string) {
         if (hashInformado.toUpperCase() !== hashVerdadeiro) {
             return { error: "CÓDIGO INVÁLIDO! Este documento foi forjado ou alterado." };
         }
+
+        await prisma.logVerificacaoDocumento.create({
+            data: {
+                codigoVerificado: codigoCompleto,
+                tipoDocumento: "Relatório Individual de Aluno",
+            }
+        });
 
         return { 
             success: true, 

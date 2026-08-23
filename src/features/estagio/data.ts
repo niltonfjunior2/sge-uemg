@@ -128,11 +128,27 @@ export async function getInformacoesGerais() {
     })
 }
 
-export async function getAdminDashboardData() {
+export async function getAdminDashboardData(unidadeId?: number, cursoId?: number) {
     const role = await getCurrentUserRole()
     if (!role) return { contratos: [], ofertas: [] }
 
     let whereClause: any = {}
+    
+    let cursoWhere: any = {};
+    if (cursoId) {
+        cursoWhere.id = cursoId;
+    } else if (unidadeId) {
+        cursoWhere.unidadeId = unidadeId;
+    }
+    const hasCursoFilter = Object.keys(cursoWhere).length > 0;
+    
+    if (hasCursoFilter) {
+        whereClause.oferta = {
+            curso: {
+                curso: cursoWhere
+            }
+        };
+    }
 
     if (role === 'PROFESSOR') {
         const supabase = await createClient()
@@ -144,6 +160,7 @@ export async function getAdminDashboardData() {
             })
             if (professor) {
                 whereClause.oferta = {
+                    ...whereClause.oferta,
                     professorOrientadorId: professor.id
                 }
             } else {
@@ -214,4 +231,109 @@ export async function getFeriados() {
     return await prisma.feriadoRecesso.findMany({
         orderBy: { data: 'asc' }
     })
+}
+
+export async function getAdminDashboardStats(unidadeId?: number, cursoId?: number) {
+    const role = await getCurrentUserRole();
+    if (role !== 'ADMIN') {
+        throw new Error("Não autorizado");
+    }
+
+    let cursoWhere: any = {};
+    if (cursoId) {
+        cursoWhere.id = cursoId;
+    } else if (unidadeId) {
+        cursoWhere.unidadeId = unidadeId;
+    }
+
+    const hasCursoFilter = Object.keys(cursoWhere).length > 0;
+
+    const ofertaWhere = hasCursoFilter ? {
+        curso: {
+            curso: cursoWhere
+        }
+    } : {};
+
+    const alunoWhere = hasCursoFilter ? {
+        curso: cursoWhere
+    } : {};
+
+    const professorWhere = hasCursoFilter ? {
+        curso: cursoWhere
+    } : {};
+
+    const estagiosOfertados = await prisma.ofertaEstagio.count({
+        where: ofertaWhere
+    });
+
+    const estagiariosCount = await prisma.contratoEstagio.count({
+        where: {
+            oferta: ofertaWhere
+        }
+    });
+
+    const estagiosConcluidos = await prisma.contratoEstagio.count({
+        where: {
+            statusAprovacao: 'ENCERRADO',
+            oferta: ofertaWhere
+        }
+    });
+
+    const estagiosIncompletos = await prisma.contratoEstagio.count({
+        where: {
+            statusAprovacao: { not: 'ENCERRADO' },
+            oferta: {
+                ...ofertaWhere,
+                relatorio: { isNot: null }
+            }
+        }
+    });
+
+    const alunosCadastrados = await prisma.aluno.count({
+        where: alunoWhere
+    });
+
+    const professoresCadastrados = await prisma.professor.count({
+        where: professorWhere
+    });
+
+    const professoresRelacao = await prisma.professor.findMany({
+        where: professorWhere,
+        include: {
+            profile: true,
+            _count: {
+                select: { ofertas: true }
+            }
+        },
+        orderBy: {
+            ofertas: {
+                _count: 'desc'
+            }
+        }
+    });
+
+    const validacoesRealizadas = await prisma.logVerificacaoDocumento.count();
+
+    return {
+        estagiosOfertados,
+        estagiariosCount,
+        estagiosConcluidos,
+        estagiosIncompletos,
+        alunosCadastrados,
+        professoresCadastrados,
+        professoresRelacao,
+        validacoesRealizadas
+    };
+}
+
+export async function getFiltrosData() {
+    const unidades = await prisma.unidadeAcademica.findMany({
+        orderBy: { nome: 'asc' }
+    });
+    
+    const cursos = await prisma.curso.findMany({
+        orderBy: { nome: 'asc' }
+    });
+
+    return { unidades, cursos };
 }
