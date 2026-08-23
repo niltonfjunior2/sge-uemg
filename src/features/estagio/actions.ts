@@ -738,3 +738,36 @@ export async function aprimorarTextoComIA(texto: string, contexto: 'AVALIACAO' |
 export async function aprimorarAtividadesComIA(texto: string) {
     return aprimorarTextoComIA(texto, 'ATIVIDADES');
 }
+export async function corrigirNomeEmpresa(nomeAntigo: string, nomeNovo: string) {
+    const role = await getCurrentUserRole();
+    if (role !== 'ADMIN') {
+        return { success: false, error: "Apenas administradores podem renomear empresas." };
+    }
+
+    if (!nomeAntigo || !nomeNovo || nomeAntigo === nomeNovo) {
+        return { success: false, error: "Nomes inválidos." };
+    }
+
+    try {
+        const result = await prisma.campoEstagio.updateMany({
+            where: {
+                razaoSocial: {
+                    equals: nomeAntigo,
+                    mode: 'insensitive'
+                }
+            },
+            data: {
+                razaoSocial: nomeNovo.trim()
+            }
+        });
+
+        revalidatePath('/admin/ranking');
+        revalidatePath('/aluno/ranking');
+        revalidatePath('/aluno/novo-estagio');
+
+        return { success: true, count: result.count };
+    } catch (e: any) {
+        console.error("Erro ao renomear empresa:", e);
+        return { success: false, error: "Erro interno ao atualizar a base de dados." };
+    }
+}

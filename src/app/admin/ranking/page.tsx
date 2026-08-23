@@ -24,7 +24,7 @@ export default async function AdminRankingPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <RankingTable ranking={ranking} />
+                    <RankingTable ranking={ranking} isAdmin={true} />
                 </CardContent>
             </Card>
         </div>
