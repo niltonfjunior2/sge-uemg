@@ -42,9 +42,10 @@ import { createEstagio, aprimorarAtividadesComIA } from "@/features/estagio/acti
 interface NovoEstagioFormProps {
     informacoesGerais: any[]
     ofertas: any[]
+    empresasNomes: string[]
 }
 
-export function NovoEstagioForm({ informacoesGerais, ofertas }: NovoEstagioFormProps) {
+export function NovoEstagioForm({ informacoesGerais, ofertas, empresasNomes }: NovoEstagioFormProps) {
     const { toast } = useToast()
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -194,7 +195,19 @@ export function NovoEstagioForm({ informacoesGerais, ofertas }: NovoEstagioFormP
                                 <FormItem>
                                     <FormLabel>Razão Social</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Razão social da empresa" className="placeholder:text-gray-400" {...field} />
+                                        <div className="relative">
+                                            <Input 
+                                                placeholder="Razão social da empresa" 
+                                                className="placeholder:text-gray-400" 
+                                                list="empresas-list"
+                                                {...field} 
+                                            />
+                                            <datalist id="empresas-list">
+                                                {empresasNomes?.map((nome) => (
+                                                    <option key={nome} value={nome} />
+                                                ))}
+                                            </datalist>
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

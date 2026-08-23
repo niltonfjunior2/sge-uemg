@@ -1,4 +1,5 @@
 import { getInformacoesGerais } from "@/features/estagio/data"
+import { getEmpresasNomes } from "@/features/estagio/data"
 import { NovoEstagioForm } from "./form"
 import { createClient } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -72,6 +73,7 @@ export default async function NovoEstagioPage() {
     const cursosDisponiveis = Array.from(cursosMap.values())
 
     const informacoesGerais = await getInformacoesGerais()
+    const empresasNomes = await getEmpresasNomes()
 
     return (
         <div className="space-y-8 max-w-4xl mx-auto pb-10">
@@ -85,6 +87,7 @@ export default async function NovoEstagioPage() {
             <NovoEstagioForm
                 informacoesGerais={informacoesGerais}
                 ofertas={ofertas}
+                empresasNomes={empresasNomes}
             />
         </div>
     )

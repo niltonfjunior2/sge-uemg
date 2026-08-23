@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FileText, PlusCircle, LogOut, User, History, Menu } from "lucide-react"
+import { Home, FileText, PlusCircle, LogOut, User, History, Menu, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { logoutAction } from "@/features/auth/actions/logout-action"
@@ -47,6 +47,12 @@ export function AlunoSidebar({ userName, hasActiveInternship }: AlunoSidebarProp
                 <Button variant={pathname === "/aluno/historico" ? "secondary" : "ghost"} className="w-full justify-start gap-2">
                     <History className="h-4 w-4" />
                     Histórico de Estágios
+                </Button>
+            </Link>
+            <Link href="/aluno/ranking" onClick={() => setOpen(false)}>
+                <Button variant={pathname === "/aluno/ranking" ? "secondary" : "ghost"} className="w-full justify-start gap-2">
+                    <Trophy className="h-4 w-4" />
+                    Ranking de Empresas
                 </Button>
             </Link>
 

@@ -332,3 +332,44 @@ export async function getFiltrosData() {
 
     return { unidades, cursos };
 }
+
+export async function getEmpresasRanking() {
+    const contratos = await prisma.contratoEstagio.findMany({
+        include: {
+            campo: true,
+            oferta: true
+        },
+        orderBy: {
+            oferta: { dataInicio: 'desc' }
+        }
+    });
+
+    const rankMap = new Map<string, { razaoSocial: string; totalEstagios: number; ultimoPeriodo: string }>();
+
+    for (const contrato of contratos) {
+        const razao = contrato.campo.razaoSocial.trim();
+        const nomeUpper = razao.toUpperCase();
+
+        if (!rankMap.has(nomeUpper)) {
+            rankMap.set(nomeUpper, {
+                razaoSocial: razao,
+                totalEstagios: 1,
+                ultimoPeriodo: contrato.oferta.semestreLetivo
+            });
+        } else {
+            const current = rankMap.get(nomeUpper)!;
+            current.totalEstagios += 1;
+            rankMap.set(nomeUpper, current);
+        }
+    }
+
+    return Array.from(rankMap.values()).sort((a, b) => b.totalEstagios - a.totalEstagios);
+}
+
+export async function getEmpresasNomes() {
+    const campos = await prisma.campoEstagio.findMany({
+        select: { razaoSocial: true },
+        distinct: ['razaoSocial']
+    });
+    return campos.map(c => c.razaoSocial.trim()).filter(Boolean).sort();
+}

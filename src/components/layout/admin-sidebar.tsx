@@ -14,7 +14,8 @@ import {
     ListOrdered,
     ShieldCheck,
     History,
-    Menu
+    Menu,
+    Trophy
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -108,6 +109,13 @@ export function AdminSidebar({ role, userName }: AdminSidebarProps) {
                 <Button variant={pathname === "/admin/historico-orientacoes" ? "secondary" : "ghost"} className="w-full justify-start gap-2">
                     <History className="h-4 w-4" />
                     Histórico
+                </Button>
+            </Link>
+
+            <Link href="/admin/ranking" onClick={() => setOpen(false)}>
+                <Button variant={pathname === "/admin/ranking" ? "secondary" : "ghost"} className="w-full justify-start gap-2">
+                    <Trophy className="h-4 w-4" />
+                    Ranking Empresas
                 </Button>
             </Link>
 
