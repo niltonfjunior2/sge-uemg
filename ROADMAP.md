@@ -178,6 +178,7 @@ Este documento define a estratégia de entrega incremental do SGE. Cada fase des
 **Dashboard Consolidado (v1.8.0):** 23/08/2026 - Implementação do painel de métricas históricas para o Administrador, incluindo tracking persistente de validações de autenticidade documental via hash e refatoração de consultas paralelas para performance (TTFB).
 **Ranking de Empresas e Autocomplete (v1.9.0):** 23/08/2026 - Implementação de Ranking histórico de empresas parceiras visível aos usuários, autocomplete via `datalist` nativo e recurso avançado de Saneamento Textual (Rename-in-place) que unifica duplicidades no banco garantindo 100% de integridade referencial dos contratos originais.
 **Filtragem de Contexto Multi-Tenant (v1.9.1):** 23/08/2026 - Evolução das buscas globais para serem sensíveis ao contexto (`Context-Aware`), restringindo dados por Curso e Unidade atrelados à sessão do usuário (`supabase.auth.getUser()`) no Ranking e Autocomplete, evitando poluição cruzada entre polos distintos da UEMG.
+**Manutenção (v1.9.2):** 23/08/2026 - Correção no Ranking de Empresas limitando resultados estritamente aos estágios associados ao "Termo de Compromisso de Estágio". Auditoria de Segurança profunda em Data Fetchers: Implementação de proteção contra IDOR em consultas diretas, blindagem de sessão contra bypass em objetos de filtro (Zero Trust) e refatoração de complexidade ciclomática em dashboards.
 
 O projeto SGE-UEMG atingiu todos os requisitos funcionais e não-funcionais planejados. O sistema está pronto para implantação em ambiente de homologação/produção.
 

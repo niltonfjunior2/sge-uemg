@@ -1,30 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { getCurrentUserRole, createClient } from "@/lib/auth"
 
-export async function getOfertasAtivas(periodo?: number) {
-    const whereClause: any = { ativo: true }
-
-    if (periodo) {
-        whereClause.curso = {
-            periodoVinculado: periodo
-        }
-    }
-
-    const ofertas = await prisma.ofertaEstagio.findMany({
-        where: whereClause,
-        include: {
-            curso: true,
-            professor: {
-                include: {
-                    profile: true
-                }
-            }
-        }
-    })
-
-    return ofertas
-}
-
 export async function getStudentDashboardData(profileId: string) {
     const aluno = await prisma.aluno.findUnique({
         where: { profileId }
@@ -59,29 +35,15 @@ export async function getStudentDashboardData(profileId: string) {
     return { contratos }
 }
 
-export async function getAllContratos() {
-    const contratos = await prisma.contratoEstagio.findMany({
-        include: {
-            aluno: {
-                include: {
-                    profile: true
-                }
-            },
-            campo: true,
-            oferta: {
-                include: {
-                    curso: true
-                }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    })
-
-    return contratos
-}
-
 export async function getContratoById(id: number) {
-    return await prisma.contratoEstagio.findUnique({
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const role = await getCurrentUserRole();
+    if (!role) return null;
+
+    const contrato = await prisma.contratoEstagio.findUnique({
         where: { id },
         include: {
             aluno: {
@@ -111,7 +73,21 @@ export async function getContratoById(id: number) {
                 }
             }
         }
-    })
+    });
+
+    if (!contrato) return null;
+
+    if (role === 'ALUNO') {
+        const aluno = await prisma.aluno.findUnique({ where: { profileId: user.id } });
+        if (!aluno || contrato.idAluno !== aluno.id) return null;
+    } else if (role === 'PROFESSOR') {
+        const prof = await prisma.professor.findUnique({ where: { profileId: user.id } });
+        if (!prof || contrato.oferta.professorOrientadorId !== prof.id) return null;
+    } else if (role !== 'ADMIN') {
+        return null;
+    }
+
+    return contrato;
 }
 
 export async function getDiarioAtividades(contratoId: number) {
@@ -129,55 +105,21 @@ export async function getInformacoesGerais() {
 }
 
 export async function getAdminDashboardData(unidadeId?: number, cursoId?: number) {
-    const role = await getCurrentUserRole()
-    if (!role) return { contratos: [], ofertas: [] }
-
-    let whereClause: any = {}
+    const { role, isProfessorAndMissingProfile, whereClause } = await getAuthorizedContext(unidadeId, cursoId);
     
-    let cursoWhere: any = {};
-    if (cursoId) {
-        cursoWhere.id = cursoId;
-    } else if (unidadeId) {
-        cursoWhere.unidadeId = unidadeId;
+    if (role !== 'ADMIN' && role !== 'PROFESSOR') {
+        return { contratos: [], ofertas: [] };
     }
-    const hasCursoFilter = Object.keys(cursoWhere).length > 0;
     
-    if (hasCursoFilter) {
-        whereClause.oferta = {
-            curso: {
-                curso: cursoWhere
-            }
-        };
-    }
-
-    if (role === 'PROFESSOR') {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (user) {
-            const professor = await prisma.professor.findUnique({
-                where: { profileId: user.id }
-            })
-            if (professor) {
-                whereClause.oferta = {
-                    ...whereClause.oferta,
-                    professorOrientadorId: professor.id
-                }
-            } else {
-                return { contratos: [], ofertas: [] } // Professor profile not found
-            }
-        }
-    } else if (role !== 'ADMIN') {
-        return { contratos: [], ofertas: [] } // Aluno shouldn't call this
+    if (isProfessorAndMissingProfile) {
+        return { contratos: [], ofertas: [] };
     }
 
     const contratos = await prisma.contratoEstagio.findMany({
-        where: whereClause,
+        where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
         include: {
             aluno: {
-                include: {
-                    profile: true
-                }
+                include: { profile: true }
             },
             campo: true,
             oferta: {
@@ -185,9 +127,7 @@ export async function getAdminDashboardData(unidadeId?: number, cursoId?: number
                     curso: {
                         include: {
                             curso: {
-                                include: {
-                                    unidade: true
-                                }
+                                include: { unidade: true }
                             }
                         }
                     }
@@ -195,16 +135,14 @@ export async function getAdminDashboardData(unidadeId?: number, cursoId?: number
             },
             acompanhamentos: {
                 orderBy: { idEtapaDef: 'asc' },
-                include: {
-                    etapaDef: true
-                }
+                include: { etapaDef: true }
             }
         },
         orderBy: { createdAt: 'desc' }
-    })
+    });
 
-    let ofertas: any[] = []
-    if (role === 'PROFESSOR' && whereClause.oferta) {
+    let ofertas: any[] = [];
+    if (role === 'PROFESSOR' && whereClause.oferta?.professorOrientadorId) {
         ofertas = await prisma.ofertaEstagio.findMany({
             where: {
                 professorOrientadorId: whereClause.oferta.professorOrientadorId,
@@ -214,17 +152,15 @@ export async function getAdminDashboardData(unidadeId?: number, cursoId?: number
                 curso: {
                     include: {
                         curso: {
-                            include: {
-                                unidade: true
-                            }
+                            include: { unidade: true }
                         }
                     }
                 }
             }
-        })
+        });
     }
 
-    return { contratos, ofertas }
+    return { contratos, ofertas };
 }
 
 export async function getFeriados() {
@@ -333,52 +269,59 @@ export async function getFiltrosData() {
     return { unidades, cursos };
 }
 
-async function buildContextualWhereClause(filtroUnidadeId?: number, filtroCursoId?: number) {
+export async function getAuthorizedContext(filtroUnidadeId?: number, filtroCursoId?: number) {
     const role = await getCurrentUserRole();
+    if (!role) throw new Error("Unauthorized");
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
 
     let whereClause: any = {};
+    let isProfessorAndMissingProfile = false;
 
-    if (user) {
-        if (role === 'ALUNO') {
-            const aluno = await prisma.aluno.findUnique({
-                where: { profileId: user.id },
-                include: { curso: true }
-            });
-            if (aluno?.cursoId) {
-                whereClause = {
-                    oferta: {
-                        curso: {
-                            cursoId: aluno.cursoId,
-                            curso: {
-                                unidadeId: aluno.curso?.unidadeId
-                            }
-                        }
+    if (role === 'ALUNO') {
+        const aluno = await prisma.aluno.findUnique({
+            where: { profileId: user.id },
+            include: { curso: true }
+        });
+        if (aluno?.cursoId) {
+            whereClause = {
+                oferta: {
+                    curso: {
+                        cursoId: aluno.cursoId,
+                        curso: { unidadeId: aluno.curso?.unidadeId }
                     }
-                };
-            }
-        } else if (role === 'PROFESSOR') {
-            const prof = await prisma.professor.findUnique({
-                where: { profileId: user.id },
-                include: { curso: true }
-            });
-            if (prof?.cursoId) {
-                whereClause = {
-                    oferta: {
-                        curso: {
-                            cursoId: prof.cursoId,
-                            curso: {
-                                unidadeId: prof.curso?.unidadeId
-                            }
-                        }
-                    }
-                };
-            }
+                }
+            };
         }
-    }
+    } else if (role === 'PROFESSOR') {
+        const prof = await prisma.professor.findUnique({
+            where: { profileId: user.id },
+            include: { curso: true }
+        });
+        if (prof) {
+            whereClause = { oferta: { professorOrientadorId: prof.id } };
+            
+            let cursoWhere: any = {};
+            if (filtroCursoId) {
+                cursoWhere.id = filtroCursoId;
+            } else if (filtroUnidadeId) {
+                cursoWhere.unidadeId = filtroUnidadeId;
+            } else if (prof.cursoId) {
+                // If professor has a specific curso tied to their profile, we could filter by it, 
+                // but usually the admin filters are what matter. We will apply the admin-like filters if requested.
+                // Or we can just limit to their own orientações, which we already do via professorOrientadorId.
+            }
 
-    if (role === 'ADMIN') {
+            if (Object.keys(cursoWhere).length > 0) {
+                 whereClause.oferta.curso = { curso: cursoWhere };
+            }
+
+        } else {
+            isProfessorAndMissingProfile = true;
+        }
+    } else if (role === 'ADMIN') {
         if (filtroCursoId || filtroUnidadeId) {
             whereClause = { oferta: { curso: {} } };
             if (filtroCursoId) whereClause.oferta.curso.cursoId = filtroCursoId;
@@ -388,12 +331,14 @@ async function buildContextualWhereClause(filtroUnidadeId?: number, filtroCursoI
         }
     }
     
-    return whereClause;
+    return { user, role, whereClause, isProfessorAndMissingProfile };
 }
 
 export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId?: number) {
-    const whereClause = await buildContextualWhereClause(filtroUnidadeId, filtroCursoId);
+    const { whereClause } = await getAuthorizedContext(filtroUnidadeId, filtroCursoId);
     
+    whereClause.tipoDocumentacao = 'Termo de Compromisso de Estágio';
+
     const contratos = await prisma.contratoEstagio.findMany({
         where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
         include: {
@@ -428,7 +373,9 @@ export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId
 }
 
 export async function getEmpresasNomes() {
-    const whereClause = await buildContextualWhereClause();
+    const { whereClause } = await getAuthorizedContext();
+    
+    whereClause.tipoDocumentacao = 'Termo de Compromisso de Estágio';
 
     const campos = await prisma.campoEstagio.findMany({
         where: Object.keys(whereClause).length > 0 ? {

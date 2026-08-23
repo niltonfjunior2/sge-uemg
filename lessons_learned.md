@@ -460,3 +460,15 @@ A camada de Data (`getEmpresasRanking` e `getEmpresasNomes`) foi refatorada para
 **Contexto:** Ocorreram cadastros de empresas duplicados (ex: "Prefeitura" e "Pref. Mun."). Fundir isso na tabela `CampoEstagio` (mudando os IDs dos `Contratos` e deletando o registro antigo) corria o risco crítico de perder dados intrínsecos de cada contrato (ex: contatos distintos do supervisor).
 **Solução:** Manutenção de todos os registros na base e alteração apenas da etiqueta textual (`razaoSocial`). Como o motor analítico conta e agrupa por *texto*, a renomeação padroniza o ranking e o autocomplete sem alterar nenhuma Foreign Key.
 **Prevenção:** Evite rotinas de "Merge & Delete" no banco de dados para dados periféricos já vinculados a registros imutáveis (como Contratos). Sanitize o *valor nominal* em lote e deixe as consultas de agrupamento cuidarem da fusão na interface.
+
+### [2026-08-23] - [SECURITY/ZERO-TRUST] Falso Positivo em Filtros Globais (Bypass de Sessão)
+
+**Contexto:** Funções criadoras de regras condicionais para o Prisma (como `buildContextualWhereClause`) inicializavam o objeto de filtro como `{}`. Se a validação do usuário ou da sessão falhasse, elas retornavam esse objeto vazio para o chamador. No Prisma, um `where: {}` equivale a buscar todos os registros irrestritamente.
+**Solução:** Refatoração para `getAuthorizedContext`, adotando o padrão "Fail-Close". A função agora lança uma exceção `throw new Error("Unauthorized")` na primeira linha se o token ou o usuário não existirem, bloqueando a requisição imediatamente antes de qualquer query ser montada.
+**Prevenção:** Em rotinas que delimitam escopo de busca baseado em papel (RBAC), o estado de fallback/erro deve ser sempre uma negação explícita ou uma exceção, jamais um filtro vazio tolerante.
+
+### [2026-08-23] - [SECURITY/IDOR] Validação de Ownership em Buscas por ID (Silenciosa)
+
+**Contexto:** Ao consultar detalhes de um recurso por URL/ID (ex: `getContratoById(id)`), a simples validação da sessão impedia acessos anônimos, mas não impedia que um Aluno A adivinhasse a URL e acessasse os dados do Aluno B (Insecure Direct Object Reference).
+**Solução:** Injeção de Ownership Checks na camada de Data Fetching. Após buscar o registro no banco, o sistema cruza o `contrato.idAluno` ou `oferta.professorOrientadorId` com o Perfil logado. Caso os IDs não coincidam, a função retorna `null` **silenciosamente**.
+**Prevenção:** Retornar erros genéricos (`null` ou `404`) ao invés de `403 Forbidden` mascara a existência do recurso, prevenindo ataques de enumeração. Sempre valide o "Dono do Dado" quando buscar recursos individuais.
