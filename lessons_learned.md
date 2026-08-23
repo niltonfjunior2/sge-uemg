@@ -408,3 +408,27 @@
 **Contexto:** O período letivo do aluno precisava se tornar editável para que ele acompanhasse as ofertas correspondentes ao seu semestre atual. Porém, alterar esse dado enquanto há contratos (estágios) em andamento corromperia a integridade da auditoria com o professor, configurando fraude de grade curricular.
 **Solução:** Implementação de bloqueio relacional condicional duplo. No Frontend (`page.tsx` + `profile-form.tsx`), a UI busca os contratos e desabilita o campo caso exista algum com status `ATIVO` ou `PENDENTE`. Na Server Action (`actions.ts`), a mesmíssima verificação relacional é repetida antes do Prisma executar o update, para evitar *bypass* via chamadas HTTP diretas.
 **Prevenção:** Em dados de "Perfil" que servem como âncora mestre para fluxos de negócio subsequentes (ex: Período, Curso, Papel), nunca libere a edição irrestrita sem validar se o usuário possui "processos abertos" dependentes dessa âncora. Sempre faça o espelhamento da trava visual do Frontend no Server-Side.
+
+### [2026-08-23] - [SECURITY/DB] RLS Omitido em Tabelas Criadas Manualmente
+
+**Contexto:** Uma nova tabela de logs (`log_verificacao_documento`) foi criada via script SQL manual (`executeRaw`) para evitar warnings de perda de dados do `prisma db push`. A tabela foi criada com sucesso, mas o RLS (Row Level Security) permaneceu desativado por padrão, expondo a tabela à API REST nativa do Supabase.
+**Solução:** Sempre que executar um `CREATE TABLE` manual em ambientes Supabase, é obrigatório encadear o comando `ALTER TABLE nome_da_tabela ENABLE ROW LEVEL SECURITY;` imediatamente a seguir.
+**Prevenção:** Inclua a habilitação do RLS no checklist mental/protocolo sempre que o Prisma não for o orquestrador exclusivo das migrations no Supabase.
+
+### [2026-08-23] - [PERFORMANCE/DB] Múltiplas Queries Independentes em Server Components
+
+**Contexto:** O painel de estatísticas administrativas realizava 8 consultas de agregação (counts) consecutivas usando `await` puro no Prisma, causando um aumento cumulativo no Time To First Byte (TTFB) e bloqueando o Event Loop em cada step.
+**Solução:** Substituição das queries encadeadas por uma desestruturação acoplada a um `Promise.all([ query1, query2... ])`, disparando as consultas simultaneamente na thread do Prisma.
+**Prevenção:** Nunca encadeie instruções `await` para requisições de banco de dados que não possuam dependência sequencial direta. Agrupe-as sempre em execução paralela.
+
+### [2026-08-23] - [SECURITY/NEXTJS] Zero-Trust em Parâmetros de URL (Server Components)
+
+**Contexto:** Rotas que recebem `searchParams` dinâmicos (ex: `/admin?unidade=1`) sofriam o risco de quebrar ou lançar erros de DB 500 caso o usuário inserisse strings corrompidas, visto que os parâmetros eram convertidos para Número e injetados cegamente no Prisma.
+**Solução:** Adoção de interceptação com **Zod** (`z.object().safeParse`) direto na assinatura do Server Component para higienizar e neutralizar entradas maliciosas via fallback silencioso (`undefined`).
+**Prevenção:** Trate as URLs e SearchParams do Next.js App Router com o mesmo rigor de segurança de uma API de mutação POST. Nunca confie nos parâmetros puros da requisição GET para queries de DB.
+
+### [2026-08-23] - [REACT/CLEAN-CODE] Dicionários (Maps) em substituição a Ternários Aninhados
+
+**Contexto:** Na renderização iterativa de tabelas (`contratos.map()`), a cor das "Badges" visuais dependia de múltiplos `ifs`/ternários aninhados `(status === 'X' ? 'red' : status === 'Y' ? 'blue'...)`. Isso inflacionava a complexidade ciclomática no momento do render JSX.
+**Solução:** Abstração completa dos ternários para Dicionários Constantes Chave-Valor (`const STATUS_MAP = { X: 'red', Y: 'blue' }`) alocados **fora** do escopo do componente, reduzindo a renderização visual a uma busca indexada elegante e rápida (`STATUS_MAP[status]`).
+**Prevenção:** Evite lógica condicional complexa dentro das instâncias de layout do React. Empregue mapas estáticos (Look-up tables) para injetar estilos ou valores computados baseados em Enumerações e Status.

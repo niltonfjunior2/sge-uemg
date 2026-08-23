@@ -18,6 +18,17 @@ interface ContratoTableProps {
     contratos: any[]
 }
 
+const PENDING_STATUSES = ['PENDENTE', 'EM_ANALISE', 'REJEITADO'];
+const STATUS_BADGE_MAP: Record<string, any> = {
+    EM_ANALISE: 'secondary',
+    REJEITADO: 'destructive',
+    PENDENTE: 'outline'
+};
+const FINAL_STATUS_MAP: Record<string, any> = {
+    ATIVO: 'success',
+    ENCERRADO: 'outline'
+};
+
 export function ContratoTable({ contratos }: ContratoTableProps) {
     if (contratos.length === 0) {
         return <div className="text-center py-10 text-muted-foreground">Nenhum estágio encontrado.</div>
@@ -38,7 +49,7 @@ export function ContratoTable({ contratos }: ContratoTableProps) {
                 <TableBody>
                     {contratos.map((contrato) => {
                         const firstPending = contrato.acompanhamentos.find((a: any) =>
-                            a.status === 'PENDENTE' || a.status === 'EM_ANALISE' || a.status === 'REJEITADO'
+                            PENDING_STATUSES.includes(a.status)
                         )
                         const currentStep = firstPending
                             ? `Etapa ${firstPending.etapaDef.numeroEtapa}`
@@ -56,17 +67,14 @@ export function ContratoTable({ contratos }: ContratoTableProps) {
                                     <div className="flex flex-col gap-1 items-start">
                                         <span className="text-sm font-medium">{currentStep}</span>
                                         {firstPending && currentStatus !== 'PENDENTE' && (
-                                            <Badge variant={
-                                                currentStatus === 'EM_ANALISE' ? 'secondary' :
-                                                    currentStatus === 'REJEITADO' ? 'destructive' : 'outline'
-                                            } className="w-fit text-[10px] px-2 h-5">
+                                            <Badge variant={STATUS_BADGE_MAP[currentStatus] || 'outline'} className="w-fit text-[10px] px-2 h-5">
                                                 {currentStatus}
                                             </Badge>
                                         )}
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={contrato.statusAprovacao === 'ATIVO' ? 'success' : 'secondary'}>
+                                    <Badge variant={FINAL_STATUS_MAP[contrato.statusAprovacao] || 'secondary'}>
                                         {contrato.statusAprovacao}
                                     </Badge>
                                 </TableCell>

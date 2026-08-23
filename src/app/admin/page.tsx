@@ -7,15 +7,23 @@ import { getCurrentUserRole } from "@/lib/auth"
 import { DashboardFilters } from "./dashboard-filters"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
+import { z } from "zod"
+
+const filterSchema = z.object({
+    unidade: z.string().optional().transform(v => (v && v !== 'all' && !isNaN(Number(v)) ? Number(v) : undefined)),
+    curso: z.string().optional().transform(v => (v && v !== 'all' && !isNaN(Number(v)) ? Number(v) : undefined))
+});
+
 export default async function AdminDashboard({
-  searchParams,
+    searchParams,
 }: {
-  searchParams: { unidade?: string; curso?: string };
+    searchParams: { unidade?: string; curso?: string };
 }) {
     const role = await getCurrentUserRole()
-    
-    const unidadeId = searchParams.unidade && searchParams.unidade !== 'all' ? Number(searchParams.unidade) : undefined;
-    const cursoId = searchParams.curso && searchParams.curso !== 'all' ? Number(searchParams.curso) : undefined;
+
+    const parsedFilters = filterSchema.safeParse(searchParams)
+    const unidadeId = parsedFilters.success ? parsedFilters.data.unidade : undefined;
+    const cursoId = parsedFilters.success ? parsedFilters.data.curso : undefined;
 
     // Fetch data based on filters
     const { contratos, ofertas } = await getAdminDashboardData(unidadeId, cursoId)
@@ -35,7 +43,7 @@ export default async function AdminDashboard({
             {role === 'ADMIN' && stats && (
                 <>
                     <DashboardFilters unidades={unidades} cursos={cursos} />
-                    
+
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -145,7 +153,7 @@ export default async function AdminDashboard({
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Visão Geral dos Estágios</CardTitle>
+                            <CardTitle>Visão Geral dos Estágios Ativos</CardTitle>
                             <CardDescription>Gerencie as solicitações e acompanhe o progresso.</CardDescription>
                         </CardHeader>
                         <CardContent>

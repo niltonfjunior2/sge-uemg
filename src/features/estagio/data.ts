@@ -262,57 +262,52 @@ export async function getAdminDashboardStats(unidadeId?: number, cursoId?: numbe
         curso: cursoWhere
     } : {};
 
-    const estagiosOfertados = await prisma.ofertaEstagio.count({
-        where: ofertaWhere
-    });
-
-    const estagiariosCount = await prisma.contratoEstagio.count({
-        where: {
-            oferta: ofertaWhere
-        }
-    });
-
-    const estagiosConcluidos = await prisma.contratoEstagio.count({
-        where: {
-            statusAprovacao: 'ENCERRADO',
-            oferta: ofertaWhere
-        }
-    });
-
-    const estagiosIncompletos = await prisma.contratoEstagio.count({
-        where: {
-            statusAprovacao: { not: 'ENCERRADO' },
-            oferta: {
-                ...ofertaWhere,
-                relatorio: { isNot: null }
+    const [
+        estagiosOfertados,
+        estagiariosCount,
+        estagiosConcluidos,
+        estagiosIncompletos,
+        alunosCadastrados,
+        professoresCadastrados,
+        professoresRelacao,
+        validacoesRealizadas
+    ] = await Promise.all([
+        prisma.ofertaEstagio.count({ where: ofertaWhere }),
+        
+        prisma.contratoEstagio.count({ where: { oferta: ofertaWhere } }),
+        
+        prisma.contratoEstagio.count({
+            where: {
+                statusAprovacao: 'ENCERRADO',
+                oferta: ofertaWhere
             }
-        }
-    });
-
-    const alunosCadastrados = await prisma.aluno.count({
-        where: alunoWhere
-    });
-
-    const professoresCadastrados = await prisma.professor.count({
-        where: professorWhere
-    });
-
-    const professoresRelacao = await prisma.professor.findMany({
-        where: professorWhere,
-        include: {
-            profile: true,
-            _count: {
-                select: { ofertas: true }
+        }),
+        
+        prisma.contratoEstagio.count({
+            where: {
+                statusAprovacao: { not: 'ENCERRADO' },
+                oferta: {
+                    ...ofertaWhere,
+                    relatorio: { isNot: null }
+                }
             }
-        },
-        orderBy: {
-            ofertas: {
-                _count: 'desc'
-            }
-        }
-    });
-
-    const validacoesRealizadas = await prisma.logVerificacaoDocumento.count();
+        }),
+        
+        prisma.aluno.count({ where: alunoWhere }),
+        
+        prisma.professor.count({ where: professorWhere }),
+        
+        prisma.professor.findMany({
+            where: professorWhere,
+            include: {
+                profile: true,
+                _count: { select: { ofertas: true } }
+            },
+            orderBy: { ofertas: { _count: 'desc' } }
+        }),
+        
+        prisma.logVerificacaoDocumento.count()
+    ]);
 
     return {
         estagiosOfertados,
