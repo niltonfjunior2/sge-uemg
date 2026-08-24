@@ -104,9 +104,9 @@ export function RankingTable({ ranking, isAdmin = false }: RankingTableProps) {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    <Badge variant="secondary" className="text-sm">
+                                    <span className="text-sm font-medium">
                                         {empresa.totalEstagios}
-                                    </Badge>
+                                    </span>
                                 </TableCell>
                                 <TableCell className="text-right text-muted-foreground text-sm">
                                     {empresa.ultimoPeriodo}
@@ -117,9 +117,9 @@ export function RankingTable({ ranking, isAdmin = false }: RankingTableProps) {
                                             variant="ghost" 
                                             size="sm" 
                                             onClick={() => handleEditClick(empresa.razaoSocial)}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="text-muted-foreground hover:text-primary transition-colors"
                                         >
-                                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                                            <Pencil className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
                                 )}
