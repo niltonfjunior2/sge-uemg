@@ -375,7 +375,8 @@ export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId
 export async function getEmpresasNomes() {
     const { whereClause } = await getAuthorizedContext();
     
-    whereClause.tipoDocumentacao = 'Termo de Compromisso de Estágio';
+    // Removendo o filtro de tipoDocumentacao para que o formulário exiba todas as empresas (Termo ou Dispensa)
+    // whereClause.tipoDocumentacao = 'Termo de Compromisso de Estágio';
 
     const campos = await prisma.campoEstagio.findMany({
         where: Object.keys(whereClause).length > 0 ? {

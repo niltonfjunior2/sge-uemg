@@ -169,7 +169,6 @@ CREATE TABLE public.keepalive (
   pinged_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT keepalive_pkey PRIMARY KEY (id)
 );
-
 CREATE TABLE public.log_verificacao_documento (
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   codigo_verificado character varying NOT NULL,
