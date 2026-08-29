@@ -364,19 +364,27 @@ export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId
     const rankMap = new Map<string, { razaoSocial: string; totalEstagios: number; ultimoPeriodo: string }>();
 
     for (const contrato of contratos) {
+        if (!contrato.campo?.razaoSocial) continue;
         const razao = contrato.campo.razaoSocial.trim();
-        const nomeUpper = razao.toUpperCase();
+        const groupingKey = razao
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, "");
 
-        if (!rankMap.has(nomeUpper)) {
-            rankMap.set(nomeUpper, {
+        if (!rankMap.has(groupingKey)) {
+            rankMap.set(groupingKey, {
                 razaoSocial: razao,
                 totalEstagios: 1,
-                ultimoPeriodo: contrato.oferta.semestreLetivo
+                ultimoPeriodo: contrato.oferta?.semestreLetivo || ''
             });
         } else {
-            const current = rankMap.get(nomeUpper)!;
+            const current = rankMap.get(groupingKey)!;
             current.totalEstagios += 1;
-            rankMap.set(nomeUpper, current);
+            if (razao.length > current.razaoSocial.length) {
+                current.razaoSocial = razao; // Prefere o nome mais longo/completo
+            }
+            rankMap.set(groupingKey, current);
         }
     }
 
@@ -398,5 +406,25 @@ export async function getEmpresasNomes() {
         select: { razaoSocial: true },
         distinct: ['razaoSocial']
     });
-    return campos.map(c => c.razaoSocial.trim()).filter(Boolean).sort();
+
+    const uniqueCampos = new Map<string, string>();
+    for (const campo of campos) {
+        if (!campo.razaoSocial) continue;
+        const rawName = campo.razaoSocial.trim();
+        const key = rawName
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, "");
+
+        if (!uniqueCampos.has(key)) {
+            uniqueCampos.set(key, rawName);
+        } else {
+            if (rawName.length > uniqueCampos.get(key)!.length) {
+                uniqueCampos.set(key, rawName); // Prefere o nome mais longo/completo
+            }
+        }
+    }
+
+    return Array.from(uniqueCampos.values()).sort();
 }
