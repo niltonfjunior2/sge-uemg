@@ -3,6 +3,9 @@ import { RankingTable } from "@/features/estagio/components/ranking-table"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2 } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export default async function AlunoRankingPage() {
     const ranking = await getEmpresasRanking()
 

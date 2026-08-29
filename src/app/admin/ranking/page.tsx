@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Building2 } from "lucide-react"
 import { DashboardFilters } from "@/app/admin/dashboard-filters"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export default async function AdminRankingPage({
     searchParams,
 }: {
