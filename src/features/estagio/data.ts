@@ -269,7 +269,7 @@ export async function getFiltrosData() {
     return { unidades, cursos };
 }
 
-export async function getAuthorizedContext(filtroUnidadeId?: number, filtroCursoId?: number) {
+export async function getAuthorizedContext(filtroUnidadeId?: number, filtroCursoId?: number, isGlobalContext: boolean = false) {
     const role = await getCurrentUserRole();
     if (!role) throw new Error("Unauthorized");
 
@@ -301,21 +301,32 @@ export async function getAuthorizedContext(filtroUnidadeId?: number, filtroCurso
             include: { curso: true }
         });
         if (prof) {
-            whereClause = { oferta: { professorOrientadorId: prof.id } };
-            
-            let cursoWhere: any = {};
-            if (filtroCursoId) {
-                cursoWhere.id = filtroCursoId;
-            } else if (filtroUnidadeId) {
-                cursoWhere.unidadeId = filtroUnidadeId;
-            } else if (prof.cursoId) {
-                // If professor has a specific curso tied to their profile, we could filter by it, 
-                // but usually the admin filters are what matter. We will apply the admin-like filters if requested.
-                // Or we can just limit to their own orientações, which we already do via professorOrientadorId.
-            }
+            if (isGlobalContext && prof.cursoId) {
+                whereClause = {
+                    oferta: {
+                        curso: {
+                            cursoId: prof.cursoId,
+                            curso: { unidadeId: prof.curso?.unidadeId }
+                        }
+                    }
+                };
+            } else {
+                whereClause = { oferta: { professorOrientadorId: prof.id } };
+                
+                let cursoWhere: any = {};
+                if (filtroCursoId) {
+                    cursoWhere.id = filtroCursoId;
+                } else if (filtroUnidadeId) {
+                    cursoWhere.unidadeId = filtroUnidadeId;
+                } else if (prof.cursoId) {
+                    // If professor has a specific curso tied to their profile, we could filter by it, 
+                    // but usually the admin filters are what matter. We will apply the admin-like filters if requested.
+                    // Or we can just limit to their own orientações, which we already do via professorOrientadorId.
+                }
 
-            if (Object.keys(cursoWhere).length > 0) {
-                 whereClause.oferta.curso = { curso: cursoWhere };
+                if (Object.keys(cursoWhere).length > 0) {
+                     whereClause.oferta.curso = { curso: cursoWhere };
+                }
             }
 
         } else {
@@ -335,7 +346,7 @@ export async function getAuthorizedContext(filtroUnidadeId?: number, filtroCurso
 }
 
 export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId?: number) {
-    const { whereClause } = await getAuthorizedContext(filtroUnidadeId, filtroCursoId);
+    const { whereClause } = await getAuthorizedContext(filtroUnidadeId, filtroCursoId, true);
     
     whereClause.tipoDocumentacao = 'Termo de Compromisso de Estágio';
 
@@ -373,7 +384,7 @@ export async function getEmpresasRanking(filtroUnidadeId?: number, filtroCursoId
 }
 
 export async function getEmpresasNomes() {
-    const { whereClause } = await getAuthorizedContext();
+    const { whereClause } = await getAuthorizedContext(undefined, undefined, true);
     
     // Removendo o filtro de tipoDocumentacao para que o formulário exiba todas as empresas (Termo ou Dispensa)
     // whereClause.tipoDocumentacao = 'Termo de Compromisso de Estágio';
